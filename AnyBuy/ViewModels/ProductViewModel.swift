@@ -9,6 +9,8 @@ class ProductViewModel: ObservableObject {
     @Published var products: [Product] = []
     @Published var isLoading = false
     
+    private let client = SupabaseManager.shared.client
+    
     func fetchProducts() async {
         isLoading = true
         defer { isLoading = false }
@@ -43,18 +45,19 @@ class ProductViewModel: ObservableObject {
         }
     }
 
-    func addProduct(product: Product) async {
-        isLoading = true
-        defer { isLoading = false }
+    func addProduct(product: Product, image: UIImage? = nil) async {
+        self.isLoading = true
+        defer { self.isLoading = false }
+        
         do {
-            try await SupabaseManager.shared.client.database
+            try await client.database
                 .from("products")
                 .insert(product)
                 .execute()
-            
-            await fetchProducts()
+                
+            print("✅ Produit enregistré !")
         } catch {
-            print("Erreur ajout : \(error)")
+            print("❌ Erreur insertion: \(error)")
         }
     }
     

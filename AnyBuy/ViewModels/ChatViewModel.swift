@@ -108,4 +108,24 @@ class ChatViewModel: ObservableObject {
         
         channel.subscribe()
     }
+    
+    
+    
+    @Published var interlocutorProfile: Profile? = nil
+
+    func fetchProfile(for userId: UUID) async {
+        do {
+            let profile: Profile = try await client.database
+                .from("profiles")
+                .select()
+                .eq("id", value: userId)
+                .single()
+                .execute()
+                .value
+            
+            self.interlocutorProfile = profile
+        } catch {
+            print("Erreur profil: \(error)")
+        }
+    }
 }

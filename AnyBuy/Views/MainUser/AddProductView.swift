@@ -95,29 +95,38 @@ struct AddProductView: View {
         guard let image = selectedImage else { return }
         
         Task {
-            // 1. Géocodage (Transformation adresse -> Coordonnées)
+            // 1. Géocodage
             let geocoder = CLGeocoder()
             let placemarks = try? await geocoder.geocodeAddressString(address)
             let location = placemarks?.first?.location
             
-            // 2. Upload de l'image via le VIEWMODEL
-            if let url = await viewModel.uploadImage(image) {
-                let newProduct = Product(
-                    id: nil,
-                    ownerId: authVM.currentUser!.id,
-                    title: name,
-                    description: description,
-                    price: Double(price) ?? 0,
-                    category: category,
-                    imageUrl: url,
-                    latitude: location?.coordinate.latitude ?? 48.8566, // Paris par défaut
-                    longitude: location?.coordinate.longitude ?? 2.3522
-                )
-                
-                // 3. Enregistrement final
-                await viewModel.addProduct(product: newProduct)
-                dismiss()
+            // 2. Tentative d'upload
+            print("DEBUG: Début upload image...")
+            guard let url = await viewModel.uploadImage(image) else {
+                print("DEBUG: L'upload a échoué (URL est nil)")
+                // Optionnel: ajouter une alerte ici pour prévenir l'utilisateur
+                return
             }
+            
+            // 3. Création de l'objet
+            let newProduct = Product(
+                id: nil,
+                ownerId: authVM.currentUser!.id,
+                title: name,
+                description: description,
+                price: Double(price) ?? 0,
+                category: category,
+                imageUrl: url,
+                latitude: location?.coordinate.latitude ?? 48.8566,
+                longitude: location?.coordinate.longitude ?? 2.3522
+            )
+            
+            // 4. Enregistrement final
+            print("DEBUG: Envoi du produit à la base...")
+            await viewModel.addProduct(product: newProduct, image: nil)
+            
+            // 5. Quitter la vue
+            dismiss()
         }
     }
 }

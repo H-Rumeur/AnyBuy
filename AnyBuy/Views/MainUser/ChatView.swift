@@ -49,10 +49,13 @@ struct ChatView: View {
             }
             .padding()
         }
-        .navigationTitle(receiverName)
+        .navigationTitle(viewModel.interlocutorProfile?.fullName ?? "Chargement...")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            Task { await viewModel.fetchMessages(for: receiverId) }
+            Task {
+                await viewModel.fetchMessages(for: receiverId)
+                await viewModel.fetchProfile(for: receiverId) // Récupère le nom et la photo
+            }
         }
     }
 
